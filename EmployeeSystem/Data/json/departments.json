@@ -1,0 +1,52 @@
+[
+    {
+        "Id": 1,
+        "Name": "IT",
+        "DepartmentSupervisor": "Omar"
+    },
+    {
+        "Id": 2,
+        "Name": "HR",
+        "DepartmentSupervisor": "Sara"
+    },
+    {
+        "Id": 3,
+        "Name": "Finance",
+        "DepartmentSupervisor": "Ahmad"
+    },
+    {
+        "Id": 4,
+        "Name": "Marketing",
+        "DepartmentSupervisor": "Lina"
+    },
+    {
+        "Id": 5,
+        "Name": "Sales",
+        "DepartmentSupervisor": "Khaled"
+    },
+    {
+        "Id": 6,
+        "Name": "Customer Support",
+        "DepartmentSupervisor": "Noor"
+    },
+    {
+        "Id": 7,
+        "Name": "Research and Development",
+        "DepartmentSupervisor": "Fadi"
+    },
+    {
+        "Id": 8,
+        "Name": "Quality Assurance",
+        "DepartmentSupervisor": "Rana"
+    },
+    {
+        "Id": 9,
+        "Name": "Logistics",
+        "DepartmentSupervisor": "Hassan"
+    },
+    {
+        "Id": 10,
+        "Name": "Procurement",
+        "DepartmentSupervisor": "Maya"
+    }
+]
