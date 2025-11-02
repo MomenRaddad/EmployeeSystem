@@ -13,7 +13,15 @@ namespace EmployeeSystem.Services
 
         public EmployeeService(InMemoryStore db)
         {
-            _db = db;
+        private static int CalYearsOfService(DateTime start, DateTime? end = null)
+        {
+            var to = end ?? DateTime.Today;
+            int years = to.Year - start.Year;
+
+            if (to.Month < start.Month || (to.Month == start.Month && to.Day < start.Day))
+                years--;
+
+            return years < 0 ? 0 : years;
         }
 
         public IEnumerable<EmployeeModel> GetAll() => _db.Employees;
@@ -31,8 +39,13 @@ namespace EmployeeSystem.Services
 
             
             if (input.EndOfServiceDate.HasValue)
+            {
+                input.YearsOfService = CalYearsOfService(input.DateOfEmployment, input.EndOfServiceDate);
                 input.IsActive = false;
             else
+            {
+                input.YearsOfService = CalYearsOfService(input.DateOfEmployment, input.EndOfServiceDate);
+
                 input.IsActive = true;
 
             _db.Employees.Add(input);
@@ -54,6 +67,7 @@ namespace EmployeeSystem.Services
             e.DateOfBirth = input.DateOfBirth;
             e.DateOfEmployment = input.DateOfEmployment;
             e.EndOfServiceDate = input.EndOfServiceDate;
+            e.YearsOfService = CalYearsOfService(input.DateOfEmployment, input.EndOfServiceDate);
             e.Position = input.Position;
             e.DepartmentId = input.DepartmentId;
             e.IsActive = input.IsActive;
@@ -88,6 +102,7 @@ namespace EmployeeSystem.Services
 
             e.IsActive = false;
             e.EndOfServiceDate = endDate;
+            e.YearsOfService = CalYearsOfService(e.DateOfEmployment, endDate);
 
             Save();
             return true;
