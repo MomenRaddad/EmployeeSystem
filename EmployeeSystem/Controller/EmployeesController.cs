@@ -67,14 +67,14 @@ namespace EmployeeSystem.Controllers
         [HttpDelete("{id:int}")]
         public IActionResult Delete(int id) => _svc.Delete(id) ? NoContent() : NotFound();
 
-        [HttpGet("by-department/{departmentId:int}")]
-        public IActionResult ByDept(int departmentId) => Ok(_svc.GetByDepartmentId(departmentId));
+        [HttpGet("by-department")]
+        public IActionResult ByDept([FromQuery]int departmentId) => Ok(svc.GetByDepartmentId(departmentId));
 
-        [HttpGet("by-position/{position}")]
-        public IActionResult ByPosition(string position) => Ok(_svc.GetByPosition(position));
+        [HttpGet("by-position")]
+        public IActionResult ByPosition([FromQuery] string position) => Ok(svc.GetByPosition(position));
 
-        [HttpGet("min-years/{minYears:int}")]
-        public IActionResult MinYears(int minYears) => Ok(_svc.GetWithMinYears(minYears));
+        [HttpGet("min-years")]
+        public IActionResult MinYears([FromQuery] int minYears) => Ok(svc.GetWithMinYears(minYears));
 
         [HttpPost("{id:int}/deactivate")]
         public IActionResult Deactivate(int id, [FromQuery] DateTime endDate) => _svc.Deactivate(id, endDate) ? NoContent() : NotFound();
