@@ -35,6 +35,7 @@ namespace EmployeeSystem.Models
         public int DepartmentId { get; set; }
 
         public bool IsActive { get; set; }
+        public DepartmentModel? Department { get; set; }
 
     }
 }

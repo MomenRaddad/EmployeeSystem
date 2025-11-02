@@ -13,5 +13,6 @@ namespace EmployeeSystem.Models
 
         [Required]
         public string DepartmentSupervisor { get; set; }
+        ICollection<EmployeeModel> Employees { get; set; } = new List<EmployeeModel>();
     }
 }

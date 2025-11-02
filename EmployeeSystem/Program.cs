@@ -1,6 +1,8 @@
 ﻿using EmployeeSystem.Data;
+using EmployeeSystem.Models;
 using EmployeeSystem.Services;
 using EmployeeSystem.Services.Interfaces;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -16,6 +18,10 @@ var empsPath = Path.Combine(contentRoot, "Data", "json", "employees.json");
 
 builder.Services.AddSingleton(sp => new InMemoryStore(depsPath, empsPath));
 
+// EF Core DbContext with SQL Server
+builder.Services.AddDbContext<AppDbContext>(options =>
+           options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"))
+       );
 // Business services
 builder.Services.AddScoped<IEmployeeService, EmployeeService>();
 builder.Services.AddScoped<IDepartmentService, DepartmentService>();
@@ -30,6 +36,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.MapGet("/", () => Results.Redirect("/swagger"));
+
 app.MapControllers();
 
 // OPTIONAL: persist current in-memory data back to JSON when app stops.
