@@ -48,7 +48,22 @@ namespace EmployeeSystem.Controllers
             if (!ModelState.IsValid) return BadRequest(ModelState);
             return _svc.Update(id, input) ? NoContent() : NotFound();
         }
+        [HttpPatch("{id:int}")]
+        public IActionResult Patch(int id, [FromBody] UpdateEmployeeDto input)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
 
+            var result = svc.UpdatePartial(id, input);
+
+            if (result.NotFound)
+                return NotFound(new { message = $"Employee {id} not found." });
+
+            if (!result.Success && result.Error is not null)
+                return BadRequest(new { message = result.Error });
+
+            return NoContent();
+        }
         [HttpDelete("{id:int}")]
         public IActionResult Delete(int id) => _svc.Delete(id) ? NoContent() : NotFound();
 

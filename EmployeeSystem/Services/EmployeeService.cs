@@ -75,6 +75,58 @@ namespace EmployeeSystem.Services
             Save();
             return true;
         }
+        public (bool Success, string? Error, bool NotFound) UpdatePartial(int id, UpdateEmployeeDto input)
+        {
+            var e = db.Employees.FirstOrDefault(x => x.Id == id);
+            if (e is null)
+                return (false, null, true);  
+
+           
+            if (!string.IsNullOrWhiteSpace(input.FirstName))
+                e.FirstName = input.FirstName;
+
+            
+            if (!string.IsNullOrWhiteSpace(input.LastName))
+                e.LastName = input.LastName;
+
+            
+            if (input.DateOfBirth.HasValue)
+                e.DateOfBirth = input.DateOfBirth.Value;
+
+
+            if (input.DateOfEmployment.HasValue)
+            {
+                e.DateOfEmployment = input.DateOfEmployment.Value;
+
+            }
+            if (input.EndOfServiceDate.HasValue)
+            {
+                e.EndOfServiceDate = input.EndOfServiceDate.Value; }
+
+
+ 
+
+            
+            if (!string.IsNullOrWhiteSpace(input.Position))
+                e.Position = input.Position;
+
+            
+            if (input.DepartmentId.HasValue)
+            {
+                bool depExists = db.Departments.Any(d => d.Id == input.DepartmentId.Value);
+                if (!depExists)
+                    return (false, "Department not found.", false);
+
+                e.DepartmentId = input.DepartmentId.Value;
+            }
+
+           
+            if (input.IsActive.HasValue)
+                e.IsActive = input.IsActive.Value;
+
+           Save();
+            return (true, null, false);
+        }
 
         public bool Delete(int id)
         {

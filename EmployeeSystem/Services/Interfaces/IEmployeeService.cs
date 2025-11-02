@@ -13,6 +13,8 @@ namespace EmployeeSystem.Services.Interfaces
 
         EmployeeModel Create(EmployeeModel input);
         bool Update(int id, EmployeeModel input);
+        (bool Success, string? Error, bool NotFound) UpdatePartial(int id, UpdateEmployeeDto input);
+
         bool Delete(int id);
 
         IEnumerable<EmployeeModel> GetByDepartmentId(int departmentId);
