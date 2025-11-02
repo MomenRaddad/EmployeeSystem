@@ -1,24 +1,22 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using EmployeeSystem.Dtos;
 using EmployeeSystem.Models;
 using EmployeeSystem.Services.Interfaces;
+using Microsoft.AspNetCore.Mvc;
 
 namespace EmployeeSystem.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    public class EmployeesController : ControllerBase
+    public class EmployeesController(IEmployeeService svc) : ControllerBase
     {
-        private readonly IEmployeeService _svc;
-        public EmployeesController(IEmployeeService svc) => _svc = svc;
-
         [HttpGet]
-        public IActionResult GetAll() => Ok(_svc.GetAll());
+        public IActionResult GetAll() => Ok(svc.GetAll());
         [HttpGet("active")]
-        public IActionResult GetActive() => Ok(_svc.GetActive());
+        public IActionResult GetActive() => Ok(svc.GetActive());
         [HttpGet("inactive")]
-        public IActionResult GetInactive() => Ok(_svc.GetInactive());
+        public IActionResult GetInactive() => Ok(svc.GetInactive());
         [HttpGet("{id:int}")]
-        public IActionResult GetById(int id) => _svc.GetById(id) is { } e ? Ok(e) : NotFound();
+        public IActionResult GetById(int id) => svc.GetById(id) is { } e ? Ok(e) : NotFound();
 
         [HttpPost]
         public IActionResult Create([FromBody] EmployeeModel input)
@@ -28,7 +26,7 @@ namespace EmployeeSystem.Controllers
 
             try
             {
-                var created = _svc.Create(input);
+                var created = svc.Create(input);
                 return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
             }
             catch (InvalidOperationException ex)
@@ -46,7 +44,21 @@ namespace EmployeeSystem.Controllers
         public IActionResult Update(int id, [FromBody] EmployeeModel input)
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
-            return _svc.Update(id, input) ? NoContent() : NotFound();
+            try
+            {
+                var updated = svc.Update(id, input);
+                return updated ? NoContent() : NotFound($"The user {id} does not exist.");
+
+            }
+            catch (InvalidOperationException ex)
+            {
+                return NotFound(new ProblemDetails
+                {
+                    Title = "Department not found",
+                    Detail = $"DepartmentId {input.DepartmentId} does not exist.",
+                    Status = StatusCodes.Status404NotFound
+                });
+            }
         }
         [HttpPatch("{id:int}")]
         public IActionResult Patch(int id, [FromBody] UpdateEmployeeDto input)
@@ -65,7 +77,7 @@ namespace EmployeeSystem.Controllers
             return NoContent();
         }
         [HttpDelete("{id:int}")]
-        public IActionResult Delete(int id) => _svc.Delete(id) ? NoContent() : NotFound();
+        public IActionResult Delete(int id) => svc.Delete(id) ? NoContent() : NotFound();
 
         [HttpGet("by-department")]
         public IActionResult ByDept([FromQuery]int departmentId) => Ok(svc.GetByDepartmentId(departmentId));
@@ -77,6 +89,6 @@ namespace EmployeeSystem.Controllers
         public IActionResult MinYears([FromQuery] int minYears) => Ok(svc.GetWithMinYears(minYears));
 
         [HttpPost("{id:int}/deactivate")]
-        public IActionResult Deactivate(int id, [FromQuery] DateTime endDate) => _svc.Deactivate(id, endDate) ? NoContent() : NotFound();
+        public IActionResult Deactivate(int id, [FromQuery] DateTime endDate) => svc.Deactivate(id, endDate) ? NoContent() : NotFound();
     }
 }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using EmployeeSystem.Dtos;
 using EmployeeSystem.Models;
 
 namespace EmployeeSystem.Services.Interfaces
@@ -16,7 +17,6 @@ namespace EmployeeSystem.Services.Interfaces
         (bool Success, string? Error, bool NotFound) UpdatePartial(int id, UpdateEmployeeDto input);
 
         bool Delete(int id);
-
         IEnumerable<EmployeeModel> GetByDepartmentId(int departmentId);
         IEnumerable<EmployeeModel> GetByPosition(string position);
         IEnumerable<EmployeeModel> GetWithMinYears(int minYears);

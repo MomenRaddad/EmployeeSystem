@@ -1,18 +1,18 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using EmployeeSystem.Data;
+﻿using EmployeeSystem.Data;
+using EmployeeSystem.Dtos;
 using EmployeeSystem.Models;
 using EmployeeSystem.Services.Interfaces;
+using Microsoft.VisualBasic;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace EmployeeSystem.Services
 {
-    public class EmployeeService : IEmployeeService
-    {
-        private readonly InMemoryStore _db;
+    public class EmployeeService(InMemoryStore db) : IEmployeeService
 
-        public EmployeeService(InMemoryStore db)
-        {
+
+    {
         private static int CalYearsOfService(DateTime start, DateTime? end = null)
         {
             var to = end ?? DateTime.Today;
@@ -23,32 +23,33 @@ namespace EmployeeSystem.Services
 
             return years < 0 ? 0 : years;
         }
+        public IEnumerable<EmployeeModel> GetAll() => db.Employees;
+        public IEnumerable<EmployeeModel> GetActive() => db.Employees.Where(e => e.IsActive);
+        public IEnumerable<EmployeeModel> GetInactive() => db.Employees.Where(e => !e.IsActive);
 
-        public IEnumerable<EmployeeModel> GetAll() => _db.Employees;
-        public IEnumerable<EmployeeModel> GetActive() => _db.Employees.Where(e => e.IsActive);
-        public IEnumerable<EmployeeModel> GetInactive() => _db.Employees.Where(e => !e.IsActive);
-
-        public EmployeeModel? GetById(int id) => _db.Employees.FirstOrDefault(e => e.Id == id);
+        public EmployeeModel? GetById(int id) => db.Employees.FirstOrDefault(e => e.Id == id);
 
         public EmployeeModel Create(EmployeeModel input)
         {
-            if (!_db.Departments.Any(d => d.Id == input.DepartmentId))
+           
+            if (!db.Departments.Any(d => d.Id == input.DepartmentId))
                 throw new InvalidOperationException("Department not found.");
 
-            input.Id = _db.NextEmployeeId();
+            input.Id = db.NextEmployeeId();
 
-            
+
             if (input.EndOfServiceDate.HasValue)
             {
                 input.YearsOfService = CalYearsOfService(input.DateOfEmployment, input.EndOfServiceDate);
                 input.IsActive = false;
+            }
             else
             {
                 input.YearsOfService = CalYearsOfService(input.DateOfEmployment, input.EndOfServiceDate);
 
                 input.IsActive = true;
-
-            _db.Employees.Add(input);
+            }
+            db.Employees.Add(input);
             Save();
 
             return input;
@@ -56,10 +57,10 @@ namespace EmployeeSystem.Services
 
         public bool Update(int id, EmployeeModel input)
         {
-            var e = _db.Employees.FirstOrDefault(x => x.Id == id);
+            var e = db.Employees.FirstOrDefault(x => x.Id == id);
             if (e is null) return false;
 
-            if (!_db.Departments.Any(d => d.Id == input.DepartmentId))
+            if (!db.Departments.Any(d => d.Id == input.DepartmentId))
                 throw new InvalidOperationException("Department not found.");
 
             e.FirstName = input.FirstName;
@@ -130,26 +131,26 @@ namespace EmployeeSystem.Services
 
         public bool Delete(int id)
         {
-            var e = _db.Employees.FirstOrDefault(x => x.Id == id);
+            var e = db.Employees.FirstOrDefault(x => x.Id == id);
             if (e is null) return false;
 
-            _db.Employees.Remove(e);
+            db.Employees.Remove(e);
             Save();
             return true;
         }
 
         public IEnumerable<EmployeeModel> GetByDepartmentId(int departmentId) =>
-            _db.Employees.Where(e => e.DepartmentId == departmentId);
+            db.Employees.Where(e => e.DepartmentId == departmentId);
 
         public IEnumerable<EmployeeModel> GetByPosition(string position) =>
-            _db.Employees.Where(e => string.Equals(e.Position, position, StringComparison.OrdinalIgnoreCase));
+            db.Employees.Where(e => string.Equals(e.Position, position, StringComparison.OrdinalIgnoreCase));
 
         public IEnumerable<EmployeeModel> GetWithMinYears(int minYears) =>
-            _db.Employees.Where(e => e.YearsOfService >= minYears);
+            db.Employees.Where(e => e.YearsOfService >= minYears);
 
         public bool Deactivate(int id, DateTime endDate)
         {
-            var e = _db.Employees.FirstOrDefault(x => x.Id == id);
+            var e = db.Employees.FirstOrDefault(x => x.Id == id);
             if (e is null) return false;
 
             e.IsActive = false;
@@ -161,6 +162,6 @@ namespace EmployeeSystem.Services
         }
 
       
-        private void Save() => _db.SaveToDisk();
+        private void Save() => db.SaveToDisk();
     }
 }

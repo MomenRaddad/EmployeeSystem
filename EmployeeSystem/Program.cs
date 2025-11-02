@@ -7,7 +7,7 @@ var builder = WebApplication.CreateBuilder(args);
 // Controllers + Swagger
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(c => c.EnableAnnotations());
 
 // JSON → IN-MEMORY store (use absolute paths based on content root)
 var contentRoot = builder.Environment.ContentRootPath;
