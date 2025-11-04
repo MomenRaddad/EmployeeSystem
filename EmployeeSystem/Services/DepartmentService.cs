@@ -1,61 +1,54 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using EmployeeSystem.Data;
+﻿using EmployeeSystem.Data;
 using EmployeeSystem.Models;
 using EmployeeSystem.Services.Interfaces;
+using Microsoft.EntityFrameworkCore;
 
 namespace EmployeeSystem.Services
 {
-    public class DepartmentService : IDepartmentService
+    public class DepartmentService(AppDbContext db) : IDepartmentService
     {
-        private readonly InMemoryStore _db;
+          public async Task<IEnumerable<DepartmentModel>> GetAll()
+               => await db.Departments.AsNoTracking().ToListAsync();
 
-        public DepartmentService(InMemoryStore db)
-        {
-            _db = db;
-        }
+          public async Task<DepartmentModel?> GetById(int id)
+               => await db.Departments.AsNoTracking().FirstOrDefaultAsync(d => d.Id == id);
 
-        public IEnumerable<DepartmentModel> GetAll() => _db.Departments;
+          public async Task<DepartmentModel> Create(DepartmentModel input)
+              {
+                   await db.Departments.AddAsync(input);
+                   await db.SaveChangesAsync();
+                   return input;
+              }
 
-        public DepartmentModel? GetById(int id) =>
-            _db.Departments.FirstOrDefault(d => d.Id == id);
+          public async Task<bool> Update(int id, DepartmentModel input)
+               {
+                   var d = await db.Departments.FirstOrDefaultAsync(x => x.Id == id);
+                   if (d is null) return false;
 
-        public DepartmentModel Create(DepartmentModel input)
-        {
-            input.Id = _db.NextDepartmentId();
-            _db.Departments.Add(input);
-            Save();
-            return input;
-        }
+                   d.Name = input.Name;
+                   d.DepartmentSupervisor = input.DepartmentSupervisor;
 
-        public bool Update(int id, DepartmentModel input)
-        {
-            var d = _db.Departments.FirstOrDefault(x => x.Id == id);
-            if (d is null) return false;
+                   await db.SaveChangesAsync();
+                   return true;
+               }
 
-            d.Name = input.Name;
-            d.DepartmentSupervisor = input.DepartmentSupervisor;
+          public async Task<bool> Delete(int id)
+               {
+                   var hasEmployees = await db.Employees.AnyAsync(e => e.DepartmentId == id);
+                   if (hasEmployees) return false;
 
-            Save();
-            return true;
-        }
+                   var d = await db.Departments.FirstOrDefaultAsync(x => x.Id == id);
+                   if (d is null) return false;
 
-        public bool Delete(int id)
-        {
-            if (_db.Employees.Any(e => e.DepartmentId == id))
-                return false;
+                   db.Departments.Remove(d);
+                   await db.SaveChangesAsync();
+                   return true;
+               }
 
-            var d = _db.Departments.FirstOrDefault(x => x.Id == id);
-            if (d is null) return false;
-
-            _db.Departments.Remove(d);
-            Save();
-            return true;
-        }
-
-        public IEnumerable<EmployeeModel> GetEmployees(int departmentId) =>
-            _db.Employees.Where(e => e.DepartmentId == departmentId);
-
-        private void Save() => _db.SaveToDisk();
+          public async Task<IEnumerable<EmployeeModel>> GetEmployees(int departmentId)
+                 => await db.Employees
+                    .AsNoTracking()
+                    .Where(e => e.DepartmentId == departmentId)
+                    .ToListAsync();
     }
 }

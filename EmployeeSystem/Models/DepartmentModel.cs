@@ -1,11 +1,13 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Swashbuckle.AspNetCore.Annotations;
+using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 namespace EmployeeSystem.Models
 {
     public class DepartmentModel
     {
         [Key]
-
+        [SwaggerSchema(ReadOnly = true)]
         public int Id { get; set; }
         [Required]
         [StringLength(100)]
@@ -13,6 +15,7 @@ namespace EmployeeSystem.Models
 
         [Required]
         public string DepartmentSupervisor { get; set; }
-        ICollection<EmployeeModel> Employees { get; set; } = new List<EmployeeModel>();
+        [JsonIgnore]
+        public  ICollection<EmployeeModel> Employees { get; set; } = new List<EmployeeModel>();
     }
 }

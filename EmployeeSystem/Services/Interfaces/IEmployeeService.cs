@@ -1,24 +1,24 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using EmployeeSystem.Dtos;
 using EmployeeSystem.Models;
 
 namespace EmployeeSystem.Services.Interfaces
 {
     public interface IEmployeeService
     {
-        IEnumerable<EmployeeModel> GetAll();
-        IEnumerable<EmployeeModel> GetActive();
-        IEnumerable<EmployeeModel> GetInactive();
-        EmployeeModel? GetById(int id);
+        Task<IEnumerable<EmployeeModel>> GetAll();
+        Task<IEnumerable<EmployeeModel>> GetActive();
+        Task<IEnumerable<EmployeeModel>> GetInactive();
+        Task<EmployeeModel?> GetById(int id);
 
-        EmployeeModel Create(EmployeeModel input);
-        bool Update(int id, EmployeeModel input);
-        bool Delete(int id);
+        Task<EmployeeModel> Create(EmployeeModel input);
+        Task<bool> Update(int id, EmployeeModel input);
+        Task<(bool Success, string? Error, bool NotFound)> UpdatePartial(int id, UpdateEmployeeDto input);
 
-        IEnumerable<EmployeeModel> GetByDepartmentId(int departmentId);
-        IEnumerable<EmployeeModel> GetByPosition(string position);
-        IEnumerable<EmployeeModel> GetWithMinYears(int minYears);
+        Task<bool> Delete(int id);
+        Task<IEnumerable<EmployeeModel>> GetByDepartmentId(int departmentId);
+        Task<IEnumerable<EmployeeModel>> GetByPosition(string position);
+        Task<IEnumerable<EmployeeModel>> GetWithMinYears(int minYears);
 
-        bool Deactivate(int id, DateTime endDate);
+        Task<bool> Deactivate(int id, DateTime endDate);
     }
 }

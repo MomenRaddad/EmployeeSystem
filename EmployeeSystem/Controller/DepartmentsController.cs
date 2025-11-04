@@ -6,39 +6,44 @@ namespace EmployeeSystem.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    public class DepartmentsController : ControllerBase
+    public class DepartmentsController(IDepartmentService svc) : ControllerBase
     {
-        private readonly IDepartmentService _svc;
-        public DepartmentsController(IDepartmentService svc) => _svc = svc;
-
         [HttpGet]
-        public IActionResult GetAll() => Ok(_svc.GetAll());
+        public async Task<ActionResult<IEnumerable<DepartmentModel>>> GetAll()
+            => Ok(await svc.GetAll()); 
+
         [HttpGet("{id:int}")]
-        public IActionResult GetById(int id) => _svc.GetById(id) is { } d ? Ok(d) : NotFound();
+        public async Task<ActionResult<DepartmentModel>> GetById(int id)
+        {
+            var d = await svc.GetById(id);
+            return d is null ? NotFound() : Ok(d);
+        }
 
         [HttpPost]
-        public IActionResult Create([FromBody] DepartmentModel input)
+        public async Task<ActionResult<DepartmentModel>> Create([FromBody] DepartmentModel input)
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
-            var created = _svc.Create(input);
+            var created = await svc.Create(input);
             return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
         }
 
         [HttpPut("{id:int}")]
-        public IActionResult Update(int id, [FromBody] DepartmentModel input)
+        public async Task<IActionResult> Update(int id, [FromBody] DepartmentModel input)
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
-            return _svc.Update(id, input) ? NoContent() : NotFound();
+            return await svc.Update(id, input) ? NoContent() : NotFound();
         }
 
         [HttpDelete("{id:int}")]
-        public IActionResult Delete(int id)
+        public async Task<IActionResult> Delete(int id)
         {
-            var ok = _svc.Delete(id);
+            var ok = await svc.Delete(id);
             if (!ok) return Conflict("Cannot delete department with existing employees.");
             return NoContent();
         }
 
-        [HttpGet("{id:int}/employees")] public IActionResult EmployeesInDept(int id) => Ok(_svc.GetEmployees(id));
+        [HttpGet("{id:int}/employees")]
+        public async Task<ActionResult<IEnumerable<EmployeeModel>>> EmployeesInDept(int id)
+            => Ok(await svc.GetEmployees(id));
     }
 }

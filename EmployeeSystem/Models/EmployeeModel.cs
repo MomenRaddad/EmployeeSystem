@@ -1,10 +1,13 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Swashbuckle.AspNetCore.Annotations;
+using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 namespace EmployeeSystem.Models
 {
     public class EmployeeModel
     {
         [Key]
+        [SwaggerSchema(ReadOnly = true)]
         public int Id { get; set; }
         [Required]
         [StringLength(50)]
@@ -25,6 +28,8 @@ namespace EmployeeSystem.Models
         public DateTime? EndOfServiceDate { get; set; }
 
         [Range(0, 50)]
+        [SwaggerSchema(ReadOnly = true)]
+
         public int YearsOfService { get; set; } 
 
         [Required]
@@ -35,6 +40,7 @@ namespace EmployeeSystem.Models
         public int DepartmentId { get; set; }
 
         public bool IsActive { get; set; }
+        [JsonIgnore]
         public DepartmentModel? Department { get; set; }
 
     }

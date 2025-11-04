@@ -1,37 +1,44 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using EmployeeSystem.Dtos;
 using EmployeeSystem.Models;
 using EmployeeSystem.Services.Interfaces;
+using Microsoft.AspNetCore.Mvc;
 
 namespace EmployeeSystem.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    public class EmployeesController : ControllerBase
+    public class EmployeesController(IEmployeeService svc) : ControllerBase
     {
-        private readonly IEmployeeService _svc;
-        public EmployeesController(IEmployeeService svc) => _svc = svc;
-
         [HttpGet]
-        public IActionResult GetAll() => Ok(_svc.GetAll());
+        public async Task<ActionResult<IEnumerable<EmployeeModel>>> GetAll() =>
+             Ok(await svc.GetAll());
+
         [HttpGet("active")]
-        public IActionResult GetActive() => Ok(_svc.GetActive());
+        public async Task<ActionResult<IEnumerable<EmployeeModel>>> GetActive() =>
+             Ok(await svc.GetActive());
+
         [HttpGet("inactive")]
-        public IActionResult GetInactive() => Ok(_svc.GetInactive());
+        public async Task<ActionResult<IEnumerable<EmployeeModel>>> GetInactive() =>
+             Ok(await svc.GetInactive());
+
         [HttpGet("{id:int}")]
-        public IActionResult GetById(int id) => _svc.GetById(id) is { } e ? Ok(e) : NotFound();
+        public async Task<ActionResult<EmployeeModel>> GetById(int id)
+        {
+            var e = await svc.GetById(id);
+            return e is null ? NotFound() : Ok(e);
+        }
 
         [HttpPost]
-        public IActionResult Create([FromBody] EmployeeModel input)
+        public async Task<ActionResult<EmployeeModel>> Create([FromBody] EmployeeModel input)
         {
-            if (!ModelState.IsValid)
-                return ValidationProblem(ModelState); 
+            if (!ModelState.IsValid) return ValidationProblem(ModelState);
 
             try
             {
-                var created = _svc.Create(input);
+                var created = await svc.Create(input);
                 return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
             }
-            catch (InvalidOperationException ex)
+            catch (InvalidOperationException)
             {
                 return NotFound(new ProblemDetails
                 {
@@ -43,25 +50,55 @@ namespace EmployeeSystem.Controllers
         }
 
         [HttpPut("{id:int}")]
-        public IActionResult Update(int id, [FromBody] EmployeeModel input)
+        public async Task<IActionResult> Update(int id, [FromBody] EmployeeModel input)
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
-            return _svc.Update(id, input) ? NoContent() : NotFound();
+
+            try
+            {
+                var ok = await svc.Update(id, input);
+                return ok ? NoContent() : NotFound($"Employee {id} does not exist.");
+            }
+            catch (InvalidOperationException)
+            {
+                return NotFound(new ProblemDetails
+                {
+                    Title = "Department not found",
+                    Detail = $"DepartmentId {input.DepartmentId} does not exist.",
+                    Status = StatusCodes.Status404NotFound
+                });
+            }
+        }
+
+        [HttpPatch("{id:int}")]
+        public async Task<IActionResult> Patch(int id, [FromBody] UpdateEmployeeDto input)
+        {
+            if (!ModelState.IsValid) return BadRequest(ModelState);
+
+            var result = await svc.UpdatePartial(id, input);
+            if (result.NotFound) return NotFound(new { message = $"Employee {id} not found." });
+            if (!result.Success && result.Error is not null) return BadRequest(new { message = result.Error });
+
+            return NoContent();
         }
 
         [HttpDelete("{id:int}")]
-        public IActionResult Delete(int id) => _svc.Delete(id) ? NoContent() : NotFound();
+        public async Task<IActionResult> Delete(int id) => (await svc.Delete(id)) ? NoContent() : NotFound();
 
-        [HttpGet("by-department/{departmentId:int}")]
-        public IActionResult ByDept(int departmentId) => Ok(_svc.GetByDepartmentId(departmentId));
+        [HttpGet("by-department")]
+        public async Task<ActionResult<IEnumerable<EmployeeModel>>> ByDept([FromQuery] int departmentId)=>
+            Ok(await svc.GetByDepartmentId(departmentId));
 
-        [HttpGet("by-position/{position}")]
-        public IActionResult ByPosition(string position) => Ok(_svc.GetByPosition(position));
+        [HttpGet("by-position")]
+        public async Task<ActionResult<IEnumerable<EmployeeModel>>> ByPosition([FromQuery] string position)=>
+            Ok(await svc.GetByPosition(position));
 
-        [HttpGet("min-years/{minYears:int}")]
-        public IActionResult MinYears(int minYears) => Ok(_svc.GetWithMinYears(minYears));
+        [HttpGet("min-years")]
+        public async Task<ActionResult<IEnumerable<EmployeeModel>>> MinYears([FromQuery] int minYears) =>
+             Ok(await svc.GetWithMinYears(minYears));
 
         [HttpPost("{id:int}/deactivate")]
-        public IActionResult Deactivate(int id, [FromQuery] DateTime endDate) => _svc.Deactivate(id, endDate) ? NoContent() : NotFound();
+        public async Task<IActionResult> Deactivate(int id, [FromQuery] DateTime endDate) =>
+             (await svc.Deactivate(id, endDate)) ? NoContent() : NotFound();
     }
 }

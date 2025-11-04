@@ -1,6 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
-
-namespace EmployeeSystem.Models
+using EmployeeSystem.Models;
+namespace EmployeeSystem.Data
 {
     public class AppDbContext: DbContext
     {
@@ -10,5 +10,15 @@ namespace EmployeeSystem.Models
         { }
         public DbSet<DepartmentModel> Departments { get; set; } 
         public DbSet<EmployeeModel> Employees { get; set; } 
+
+      protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            base.OnModelCreating(modelBuilder);
+
+           modelBuilder.Entity<EmployeeModel>();
+
+
+
+        }
     }
 }
