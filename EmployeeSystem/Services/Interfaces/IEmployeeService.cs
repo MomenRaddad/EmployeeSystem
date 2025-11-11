@@ -20,6 +20,6 @@ namespace EmployeeSystem.Services.Interfaces
 
         Task<IEnumerable<EmployeeModel>> FilterEmployees(EmployeeFilter filter);
 
-        Task<bool> Deactivate(int id, DateTime endDate);
+        Task<bool> Deactivate(int id, DateTime? endDate);
     }
 }

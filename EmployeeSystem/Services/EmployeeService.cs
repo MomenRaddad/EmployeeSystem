@@ -2,6 +2,7 @@
 using EmployeeSystem.Dtos;
 using EmployeeSystem.Models;
 using EmployeeSystem.Services.Interfaces;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.EntityFrameworkCore;
 
 namespace EmployeeSystem.Services
@@ -9,15 +10,6 @@ namespace EmployeeSystem.Services
     public class EmployeeService(AppDbContext db) : IEmployeeService
     {
      
-
-        private static int CalcYears(DateTime start, DateTime? end = null)
-        {
-            var to = end ?? DateTime.Today;
-            var years = to.Year - start.Year;
-            if (to.Month < start.Month || (to.Month == start.Month && to.Day < start.Day)) years--;
-            return years < 0 ? 0 : years;
-        }
-
         public async Task<IEnumerable<EmployeeModel>> GetAll()
         {
 
@@ -36,7 +28,6 @@ namespace EmployeeSystem.Services
             var depExists = await db.Departments.AnyAsync(d => d.Id == input.DepartmentId);
             if (!depExists) throw new InvalidOperationException("Department not found.");
 
-            input.YearsOfService = CalcYears(input.DateOfEmployment, input.EndOfServiceDate);
             input.IsActive = !input.EndOfServiceDate.HasValue;
 
             await db.Employees.AddAsync(input);
@@ -60,7 +51,6 @@ namespace EmployeeSystem.Services
             e.DateOfBirth = input.DateOfBirth;
             e.DateOfEmployment = input.DateOfEmployment;
             e.EndOfServiceDate = input.EndOfServiceDate;
-            e.YearsOfService = CalcYears(input.DateOfEmployment, input.EndOfServiceDate);
             e.Position = input.Position;
             e.DepartmentId = input.DepartmentId;
             e.IsActive = input.IsActive;
@@ -90,7 +80,6 @@ namespace EmployeeSystem.Services
 
             if (input.IsActive.HasValue) e.IsActive = input.IsActive.Value;
 
-            e.YearsOfService = CalcYears(e.DateOfEmployment, e.EndOfServiceDate);
 
             await db.SaveChangesAsync();
             return (true, null, false);
@@ -106,14 +95,14 @@ namespace EmployeeSystem.Services
             return true;
         }
 
-        public async Task<bool> Deactivate(int id, DateTime endDate)
+        public async Task<bool> Deactivate(int id, DateTime? endDate)
         {
+        
             var e = await db.Employees.FirstOrDefaultAsync(x => x.Id == id);
             if (e is null) return false;
 
             e.IsActive = false;
-            e.EndOfServiceDate = endDate;
-            e.YearsOfService = CalcYears(e.DateOfEmployment, endDate);
+            e.EndOfServiceDate = endDate?? DateTime.Now;
 
             await db.SaveChangesAsync();
             return true;

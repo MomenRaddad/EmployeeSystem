@@ -67,7 +67,6 @@ namespace EmployeeSystem.Data
                         DateOfBirth = new DateTime(1988, 11, 30),
                         DateOfEmployment = new DateTime(2015, 9, 25),
                         EndOfServiceDate = new DateTime(2023, 12, 31),
-                        YearsOfService = 8,
                         IsActive = false,
                         DepartmentId = depsByName["Marketing"]
                     },
@@ -79,7 +78,6 @@ namespace EmployeeSystem.Data
                         DateOfBirth = new DateTime(1992, 4, 18),
                         DateOfEmployment = new DateTime(2019, 6, 12),
                         EndOfServiceDate = new DateTime(2024, 5, 30),
-                        YearsOfService = 5,
                         DepartmentId = depsByName["Sales"],
                         IsActive = false
                     },

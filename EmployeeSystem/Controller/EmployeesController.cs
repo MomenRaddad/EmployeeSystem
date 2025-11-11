@@ -95,7 +95,7 @@ namespace EmployeeSystem.Controllers
 
 
         [HttpPost("{id:int}/deactivate")]
-        public async Task<IActionResult> Deactivate(int id, [FromQuery] DateTime endDate) =>
+        public async Task<IActionResult> Deactivate(int id, [FromQuery] DateTime? endDate) =>
              (await svc.Deactivate(id, endDate)) ? NoContent() : NotFound();
     }
 }
