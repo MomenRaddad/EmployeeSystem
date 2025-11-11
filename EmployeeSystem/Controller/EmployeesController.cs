@@ -13,13 +13,7 @@ namespace EmployeeSystem.Controllers
         public async Task<ActionResult<IEnumerable<EmployeeModel>>> GetAll() =>
              Ok(await svc.GetAll());
 
-        [HttpGet("active")]
-        public async Task<ActionResult<IEnumerable<EmployeeModel>>> GetActive() =>
-             Ok(await svc.GetActive());
 
-        [HttpGet("inactive")]
-        public async Task<ActionResult<IEnumerable<EmployeeModel>>> GetInactive() =>
-             Ok(await svc.GetInactive());
 
         [HttpGet("{id:int}")]
         public async Task<ActionResult<EmployeeModel>> GetById(int id)
@@ -48,6 +42,7 @@ namespace EmployeeSystem.Controllers
                 });
             }
         }
+
 
         [HttpPut("{id:int}")]
         public async Task<IActionResult> Update(int id, [FromBody] EmployeeModel input)
@@ -85,17 +80,19 @@ namespace EmployeeSystem.Controllers
         [HttpDelete("{id:int}")]
         public async Task<IActionResult> Delete(int id) => (await svc.Delete(id)) ? NoContent() : NotFound();
 
-        [HttpGet("by-department")]
-        public async Task<ActionResult<IEnumerable<EmployeeModel>>> ByDept([FromQuery] int departmentId)=>
-            Ok(await svc.GetByDepartmentId(departmentId));
+        [HttpPost("filter")]
 
-        [HttpGet("by-position")]
-        public async Task<ActionResult<IEnumerable<EmployeeModel>>> ByPosition([FromQuery] string position)=>
-            Ok(await svc.GetByPosition(position));
+        public async Task<ActionResult<IEnumerable<EmployeeModel>>> Filter([FromQuery] EmployeeFilter filter)
+        {
+            if (!ModelState.IsValid)
 
-        [HttpGet("min-years")]
-        public async Task<ActionResult<IEnumerable<EmployeeModel>>> MinYears([FromQuery] int minYears) =>
-             Ok(await svc.GetWithMinYears(minYears));
+                return BadRequest();
+
+            return Ok(await svc.FilterEmployees(filter));
+
+        }
+
+
 
         [HttpPost("{id:int}/deactivate")]
         public async Task<IActionResult> Deactivate(int id, [FromQuery] DateTime endDate) =>

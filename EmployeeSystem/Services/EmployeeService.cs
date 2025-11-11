@@ -19,27 +19,17 @@ namespace EmployeeSystem.Services
         }
 
         public async Task<IEnumerable<EmployeeModel>> GetAll()
-            => await db.Employees.AsNoTracking().ToListAsync();
+        {
 
-        public async Task<IEnumerable<EmployeeModel>> GetActive()
-            => await db.Employees.AsNoTracking().Where(e => e.IsActive).ToListAsync();
+           return await db.Employees.AsNoTracking().ToListAsync();
 
-        public async Task<IEnumerable<EmployeeModel>> GetInactive()
-            => await db.Employees.AsNoTracking().Where(e => !e.IsActive).ToListAsync();
+        }
+
+
 
         public async Task<EmployeeModel?> GetById(int id)
             => await db.Employees.AsNoTracking().FirstOrDefaultAsync(e => e.Id == id);
 
-        public async Task<IEnumerable<EmployeeModel>> GetByDepartmentId(int departmentId)
-            => await db.Employees.AsNoTracking().Where(e => e.DepartmentId == departmentId).ToListAsync();
-
-        public async Task<IEnumerable<EmployeeModel>> GetByPosition(string position)
-            => await db.Employees.AsNoTracking()
-                .Where(e => e.Position.ToLower() == position.ToLower())
-                .ToListAsync();
-
-        public async Task<IEnumerable<EmployeeModel>> GetWithMinYears(int minYears)
-            => await db.Employees.AsNoTracking().Where(e => e.YearsOfService >= minYears).ToListAsync();
 
         public async Task<EmployeeModel> Create(EmployeeModel input)
         {
@@ -127,6 +117,33 @@ namespace EmployeeSystem.Services
 
             await db.SaveChangesAsync();
             return true;
+        }
+
+        public async Task<IEnumerable<EmployeeModel>> FilterEmployees(EmployeeFilter filter)
+        {
+            var query = db.Employees.AsNoTracking().AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(filter.Position))
+            {
+                query = query.Where(e => e.Position.ToLower() == filter.Position.ToLower());
+            }
+            if(filter.EmployeeId.HasValue)
+            {
+                query = query.Where(e => e.Id == filter.EmployeeId.Value);
+            }
+            if (filter.DepartmentId.HasValue)
+            {
+                query = query.Where(e => e.DepartmentId == filter.DepartmentId.Value);
+            }
+            if (filter.MinYearsOfService.HasValue)
+            {
+                query = query.Where(e => e.YearsOfService >= filter.MinYearsOfService.Value);
+            }
+            if (filter.IsActive.HasValue)
+            {
+                query = query.Where(e => e.IsActive == filter.IsActive.Value);
+            }
+            return await query.ToListAsync();
         }
     }
 }
