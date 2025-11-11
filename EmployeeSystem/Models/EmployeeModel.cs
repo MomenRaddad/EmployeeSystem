@@ -9,6 +9,8 @@ namespace EmployeeSystem.Models
         [Key]
         [SwaggerSchema(ReadOnly = true)]
         public int Id { get; set; }
+        public Guid PublicId { get; set; } = Guid.NewGuid();
+
         [Required]
         [StringLength(50)]
         public string FirstName { get; set; }
@@ -38,6 +40,7 @@ namespace EmployeeSystem.Models
 
         [Required]
         public int DepartmentId { get; set; }
+
 
         public bool IsActive { get; set; }
         [JsonIgnore]
