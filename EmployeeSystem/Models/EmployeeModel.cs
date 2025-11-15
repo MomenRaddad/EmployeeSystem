@@ -10,6 +10,8 @@ namespace EmployeeSystem.Models
         [Key]
         [SwaggerSchema(ReadOnly = true)]
         public int Id { get; set; }
+        [SwaggerSchema(ReadOnly = true)]
+
         public Guid PublicId { get; set; } = Guid.NewGuid();
 
         [Required]

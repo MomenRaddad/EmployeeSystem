@@ -1,31 +1,44 @@
 ﻿using EmployeeSystem.Dtos;
+using EmployeeSystem.Infrastructure;
 using EmployeeSystem.Models;
 using EmployeeSystem.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 
 namespace EmployeeSystem.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    public class EmployeesController(IEmployeeService svc) : ControllerBase
+    public class EmployeesController(IEmployeeService svc, ILogger<EmployeesController> logger) : ControllerBase
     {
         [HttpGet]
         public async Task<ActionResult<IEnumerable<EmployeeModel>>> GetAll() =>
              Ok(await svc.GetAll());
 
-
-
         [HttpGet("{id:int}")]
         public async Task<ActionResult<EmployeeModel>> GetById(int id)
         {
             var e = await svc.GetById(id);
-            return e is null ? NotFound() : Ok(e);
+            if (e is null)
+            {
+                return NotFound(new ProblemDetails
+                {
+                    Title = "Employee not found",
+                    Detail = $"Employee {id} does not exist.",
+                    Status = StatusCodes.Status404NotFound
+                });
+            }
+            return Ok(e);
         }
 
         [HttpPost]
         public async Task<ActionResult<EmployeeModel>> Create([FromBody] EmployeeModel input)
         {
-            if (!ModelState.IsValid) return ValidationProblem(ModelState);
+            if (!ModelState.IsValid)
+            {
+                logger.LogWarning("Invalid model for CreateEmployee: {@Errors} {@input}", ModelState.ToSimpleErrors(), input);
+                return ValidationProblem(ModelState);
+            }
 
             try
             {
@@ -43,16 +56,29 @@ namespace EmployeeSystem.Controllers
             }
         }
 
-
         [HttpPut("{id:int}")]
         public async Task<IActionResult> Update(int id, [FromBody] EmployeeModel input)
         {
-            if (!ModelState.IsValid) return BadRequest(ModelState);
+            if (!ModelState.IsValid)
+            {
+                logger.LogWarning("Invalid model for Update employee {EmployeeId}: {@Errors}", id, ModelState.ToSimpleErrors());
+                return ValidationProblem(ModelState);
+            }
 
             try
             {
                 var ok = await svc.Update(id, input);
-                return ok ? NoContent() : NotFound($"Employee {id} does not exist.");
+                if (!ok)
+                {
+                    return NotFound(new ProblemDetails
+                    {
+                        Title = "Employee not found",
+                        Detail = $"Employee {id} does not exist.",
+                        Status = StatusCodes.Status404NotFound
+                    });
+                }
+
+                return NoContent();
             }
             catch (InvalidOperationException)
             {
@@ -68,34 +94,67 @@ namespace EmployeeSystem.Controllers
         [HttpPatch("{id:int}")]
         public async Task<IActionResult> Patch(int id, [FromBody] UpdateEmployeeDto input)
         {
-            if (!ModelState.IsValid) return BadRequest(ModelState);
+            if (!ModelState.IsValid)
+            {
+                logger.LogWarning("Invalid model for Patch employee {EmployeeId}: {@Errors}", id, ModelState.ToSimpleErrors());
+                return ValidationProblem(ModelState);
+            }
 
             var result = await svc.UpdatePartial(id, input);
-            if (result.NotFound) return NotFound(new { message = $"Employee {id} not found." });
-            if (!result.Success && result.Error is not null) return BadRequest(new { message = result.Error });
+
+            if (result.NotFound)
+            {
+                return NotFound(new { message = $"Employee {id} not found." });
+            }
+
+            if (!result.Success && result.Error is not null)
+            {
+                return BadRequest(new { message = result.Error });
+            }
 
             return NoContent();
         }
 
         [HttpDelete("{id:int}")]
-        public async Task<IActionResult> Delete(int id) => (await svc.Delete(id)) ? NoContent() : NotFound();
+        public async Task<IActionResult> Delete(int id)
+        {
+            var ok = await svc.Delete(id);
+            if (!ok)
+            {
+                return NotFound(new ProblemDetails
+                {
+                    Title = "Employee not found",
+                    Detail = $"Employee {id} does not exist.",
+                    Status = StatusCodes.Status404NotFound
+                });
+            }
+
+            return NoContent();
+        }
 
         [HttpPost("filter")]
-
         public async Task<ActionResult<IEnumerable<EmployeeModel>>> Filter([FromQuery] EmployeeFilter filter)
         {
             if (!ModelState.IsValid)
+            {
+                logger.LogWarning("Invalid query for FilterEmployees: {@Errors}", ModelState.ToSimpleErrors());
+                return ValidationProblem(ModelState);
+            }
 
-                return BadRequest();
-
-            return Ok(await svc.FilterEmployees(filter));
-
+            var data = await svc.FilterEmployees(filter);
+            return Ok(data);
         }
 
-
-
         [HttpPost("{id:int}/deactivate")]
-        public async Task<IActionResult> Deactivate(int id, [FromQuery] DateTime? endDate) =>
-             (await svc.Deactivate(id, endDate)) ? NoContent() : NotFound();
+        public async Task<IActionResult> Deactivate(int id, [FromQuery] DateTime? endDate)
+        {
+            var ok = await svc.Deactivate(id, endDate);
+            if (!ok)
+            {
+                return NotFound();
+            }
+
+            return NoContent();
+        }
     }
 }
