@@ -1,74 +1,109 @@
-# 🏢 EmployeeSystem Web API
+# 🏢 EmployeeSystem Web API — EF Core + SQL Server
 
-The **EmployeeSystem** is a robust **ASP.NET Core Web API** designed for managing employee and department data. It follows a clean, service-oriented architecture, using an **In-Memory Store** for data persistence. This project demonstrates strong separation of concerns and integrated business logic.
-
----
-
-## ✨ Key Features & Business Logic
-
-The system is fully compliant with all specified requirements, offering the following functionality:
-
-* **Complete CRUD:** Full Create, Read, Update, and Delete operations for both **Employee** and **Department** models.
-* **Automatic Service Calculation:** The read-only property **`YearsOfService`** is dynamically calculated based on the employee's `DateOfEmployment`.
-* **Advanced Employee Querying:** Retrieval of **active/inactive** employees, filtering by **Department ID**, **Position**, and **minimum years of service**.
-* **Data Integrity & Validation:**
-    * **Required Field Validation** is enforced on key model properties.
-    * **Deletion Lock:** Prevents deletion of a department if any employees are linked to it.
-* **Employee Lifecycle:** A dedicated endpoint to **deactivate** an employee, which sets `IsActive` to `false` and records the `EndOfServiceDate`.
+A clean and modular **ASP.NET Core Web API** for managing employees and departments.  
+The project follows **SOLID principles**, uses **Entity Framework Core + SQL Server**, and exposes RESTful endpoints with Swagger UI.
 
 ---
 
-## 🛠️ Prerequisites
+## ✨ Features
 
-* **.NET SDK** (The target framework used for the project).
-* **Visual Studio** or **Visual Studio Code**.
+### ✅ Employees
+- Create / Read / Update / Delete
+- Filter:
+  - Active employees
+  - Inactive employees
+  - By department
+  - By position
+  - By minimum years of service
+- Patch support (`UpdatePartial`)
+- Auto-calculate `YearsOfService`
+- Deactivate employee endpoint
 
----
-
-## ⚙️ Getting Started
-
-1.  **Clone the Repository:**
-    ```bash
-    git clone [https://github.com/MomenRaddad/EmployeeSystem.git](https://github.com/MomenRaddad/EmployeeSystem.git) 
-    cd EmployeeSystem
-    ```
-2.  **Run the Application:**
-    ```bash
-    dotnet run
-    ```
-The API will launch on a local port (e.g., `https://localhost:7166`).
-
-### 🔗 API Documentation & Testing
-
-Once running, the entire API can be viewed and tested interactively using the **Swagger UI**:
-
-* **Swagger URL:** `https://localhost:7166/swagger/index.html` (Note: The port may vary.)
+### ✅ Departments
+- Full CRUD
+- Prevent delete if employees exist
+- Get employees in specific department
 
 ---
 
-## 🗺️ Project Structure
+## 🧠 Architecture & Design
 
-The project uses a clean architecture with clear layer separation:
+| Concept | Applied |
+|--------|--------|
+Clean Architecture | ✅ Controllers → Services → EF Core |
+SOLID Principles | ✅ SRP, DIP, DI |
+Dependency Injection | ✅ Services registered in Program.cs |
+DTOs | ✅ For partial update (PATCH) |
+EF Core | ✅ Code-First, Migrations, Async ops |
+Circular JSON Fix | ✅ `JsonIgnore` on navigation properties |
 
-```markdown
+---
+## 📂 Project Structure
+
+```console
 EmployeeSystem/
-├── Controllers/         # Handles incoming HTTP requests and calls the relevant services
-│   ├── EmployeesController.cs  
+│
+├── Controllers/
+│   ├── EmployeesController.cs
 │   └── DepartmentsController.cs
-|
-├── Models/              # Data Entities (EmployeeModel, DepartmentModel)
-│   ├── EmployeeModel.cs  
+│
+├── Data/
+│   ├── AppDbContext.cs
+│   └── AppDbContextSeed.cs
+│
+├── Dtos/
+│   └── UpdateEmployeeDto.cs
+│
+├── Models/
+│   ├── EmployeeModel.cs
 │   └── DepartmentModel.cs
-|
-├── Services/            # Business Logic Layer (Implements core application logic)
-│   ├── Interfaces/      # Service Contracts (IEmployeeService, IDepartmentService)
-│   └── (Concrete Services) # Service implementations
-|
-├── Data/                # Data Access Layer
-│   ├── json/            # Folder containing the persistent JSON data files
-│   │   ├── employees.json   # Employee data store
-│   │   └── departments.json # Department data store
-│   └── InMemoryStore.cs # Class responsible for reading/writing data from/to JSON files (Persistent In-Memory Store)
-|
-├── Program.cs           # Application entry point, service registration (DI), and middleware configuration
-└── appsettings.json     # Application configuration settings
+│
+├── Services/
+│   ├── Interfaces/
+│   │   ├── IEmployeeService.cs
+│   │   └── IDepartmentService.cs
+│   │
+│   ├── EmployeeService.cs
+│   └── DepartmentService.cs
+│
+├── Migrations/
+│
+├── Program.cs
+└── appsettings.json
+
+
+```
+
+## 📑 API Endpoints
+
+### 👥 Employees Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+GET | `/api/employees` | Get all employees  
+GET | `/api/employees/active` | Get active employees  
+GET | `/api/employees/inactive` | Get inactive employees  
+GET | `/api/employees/{id}` | Get employee by ID  
+POST | `/api/employees` | Create a new employee  
+PUT | `/api/employees/{id}` | Update employee (full update)  
+PATCH | `/api/employees/{id}` | Partially update employee  
+DELETE | `/api/employees/{id}` | Delete an employee  
+POST | `/api/employees/{id}/deactivate?endDate=YYYY-MM-DD` | Deactivate employee and set EndOfServiceDate  
+GET | `/api/employees/by-department?departmentId={id}` | List employees in specific department  
+GET | `/api/employees/by-position?position=Manager` | Filter employees by position  
+GET | `/api/employees/min-years?minYears=3` | Employees with minimum years of service  
+
+
+---
+
+### 🏢 Department Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+GET | `/api/departments` | Get all departments  
+GET | `/api/departments/{id}` | Get department by ID  
+POST | `/api/departments` | Create a new department  
+PUT | `/api/departments/{id}` | Update department  
+DELETE | `/api/departments/{id}` | Delete department (blocked if employees exist)  
+GET | `/api/departments/{id}/employees` | Get employees in a department  
+

@@ -1,35 +1,57 @@
 ﻿using EmployeeSystem.Dtos;
+using EmployeeSystem.Infrastructure;
 using EmployeeSystem.Models;
 using EmployeeSystem.Services.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace EmployeeSystem.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    public class EmployeesController(IEmployeeService svc) : ControllerBase
+    public class EmployeesController(IEmployeeService svc, ILogger<EmployeesController> logger) : ControllerBase
     {
         [HttpGet]
-        public IActionResult GetAll() => Ok(svc.GetAll());
-        [HttpGet("active")]
-        public IActionResult GetActive() => Ok(svc.GetActive());
-        [HttpGet("inactive")]
-        public IActionResult GetInactive() => Ok(svc.GetInactive());
+        [AllowAnonymous]
+        public async Task<ActionResult<IEnumerable<EmployeeModel>>> GetAll() =>
+             Ok(await svc.GetAll());
+
         [HttpGet("{id:int}")]
-        public IActionResult GetById(int id) => svc.GetById(id) is { } e ? Ok(e) : NotFound();
+        public async Task<ActionResult<EmployeeModel>> GetById(int id)
+        {
+            var e = await svc.GetById(id);
+            if (e is null)
+            {
+                return NotFound(new ProblemDetails
+                {
+                    Title = "Employee not found",
+                    Detail = $"Employee {id} does not exist.",
+                    Status = StatusCodes.Status404NotFound
+                });
+            }
+            return Ok(e);
+        }
 
         [HttpPost]
-        public IActionResult Create([FromBody] EmployeeModel input)
+        [Authorize(Roles = nameof(AppRole.Admin))]
+        [SwaggerOperation(Summary = "Admin-only")]
+
+        public async Task<ActionResult<EmployeeModel>> Create([FromBody] EmployeeModel input)
         {
             if (!ModelState.IsValid)
-                return ValidationProblem(ModelState); 
+            {
+                logger.LogWarning("Invalid model for CreateEmployee: {@Errors} {@input}", ModelState.ToSimpleErrors(), input);
+                return ValidationProblem(ModelState);
+            }
 
             try
             {
-                var created = svc.Create(input);
+                var created = await svc.Create(input);
                 return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
             }
-            catch (InvalidOperationException ex)
+            catch (InvalidOperationException)
             {
                 return NotFound(new ProblemDetails
                 {
@@ -39,56 +61,118 @@ namespace EmployeeSystem.Controllers
                 });
             }
         }
-
+        [Authorize(Roles = nameof(AppRole.Admin))]
         [HttpPut("{id:int}")]
-        public IActionResult Update(int id, [FromBody] EmployeeModel input)
-        {
-            if (!ModelState.IsValid) return BadRequest(ModelState);
-            try
-            {
-                var updated = svc.Update(id, input);
-                return updated ? NoContent() : NotFound($"The user {id} does not exist.");
+        [SwaggerOperation(Summary = "Admin-only")]
 
-            }
-            catch (InvalidOperationException ex)
-            {
-                return NotFound(new ProblemDetails
-                {
-                    Title = "Department not found",
-                    Detail = $"DepartmentId {input.DepartmentId} does not exist.",
-                    Status = StatusCodes.Status404NotFound
-                });
-            }
-        }
-        [HttpPatch("{id:int}")]
-        public IActionResult Patch(int id, [FromBody] UpdateEmployeeDto input)
+        public async Task<IActionResult> Update(int id, [FromBody] EmployeeModel input)
         {
             if (!ModelState.IsValid)
-                return BadRequest(ModelState);
+            {
+                logger.LogWarning("Invalid model for Update employee {EmployeeId}: {@Errors}", id, ModelState.ToSimpleErrors());
+                return ValidationProblem(ModelState);
+            }
 
-            var result = svc.UpdatePartial(id, input);
+            try
+            {
+                var ok = await svc.Update(id, input);
+                if (!ok)
+                {
+                    return NotFound(new ProblemDetails
+                    {
+                        Title = "Employee not found",
+                        Detail = $"Employee {id} does not exist.",
+                        Status = StatusCodes.Status404NotFound
+                    });
+                }
+
+                return NoContent();
+            }
+            catch (InvalidOperationException)
+            {
+                return NotFound(new ProblemDetails
+                {
+                    Title = "Department not found",
+                    Detail = $"DepartmentId {input.DepartmentId} does not exist.",
+                    Status = StatusCodes.Status404NotFound
+                });
+            }
+        }
+
+        [HttpPatch("{id:int}")]
+        [Authorize(Roles = nameof(AppRole.Admin))]
+        [SwaggerOperation(Summary = "Admin-only")]
+
+        public async Task<IActionResult> Patch(int id, [FromBody] UpdateEmployeeDto input)
+        {
+            if (!ModelState.IsValid)
+            {
+                logger.LogWarning("Invalid model for Patch employee {EmployeeId}: {@Errors}", id, ModelState.ToSimpleErrors());
+                return ValidationProblem(ModelState);
+            }
+
+            var result = await svc.UpdatePartial(id, input);
 
             if (result.NotFound)
+            {
                 return NotFound(new { message = $"Employee {id} not found." });
+            }
 
             if (!result.Success && result.Error is not null)
+            {
                 return BadRequest(new { message = result.Error });
+            }
 
             return NoContent();
         }
+
         [HttpDelete("{id:int}")]
-        public IActionResult Delete(int id) => svc.Delete(id) ? NoContent() : NotFound();
+        [SwaggerOperation(Summary = "Admin-only")]
 
-        [HttpGet("by-department")]
-        public IActionResult ByDept([FromQuery]int departmentId) => Ok(svc.GetByDepartmentId(departmentId));
+        public async Task<IActionResult> Delete(int id)
+        {
+            var ok = await svc.Delete(id);
+            if (!ok)
+            {
+                return NotFound(new ProblemDetails
+                {
+                    Title = "Employee not found",
+                    Detail = $"Employee {id} does not exist.",
+                    Status = StatusCodes.Status404NotFound
+                });
+            }
 
-        [HttpGet("by-position")]
-        public IActionResult ByPosition([FromQuery] string position) => Ok(svc.GetByPosition(position));
+            return NoContent();
+        }
 
-        [HttpGet("min-years")]
-        public IActionResult MinYears([FromQuery] int minYears) => Ok(svc.GetWithMinYears(minYears));
+        [HttpPost("filter")]
+        [Authorize(Roles = nameof(AppRole.Admin))]
+        [SwaggerOperation(Summary = "Admin-only")]
+
+        public async Task<ActionResult<IEnumerable<EmployeeModel>>> Filter([FromQuery] EmployeeFilter filter)
+        {
+            if (!ModelState.IsValid)
+            {
+                logger.LogWarning("Invalid query for FilterEmployees: {@Errors}", ModelState.ToSimpleErrors());
+                return ValidationProblem(ModelState);
+            }
+
+            var data = await svc.FilterEmployees(filter);
+            return Ok(data);
+        }
 
         [HttpPost("{id:int}/deactivate")]
-        public IActionResult Deactivate(int id, [FromQuery] DateTime endDate) => svc.Deactivate(id, endDate) ? NoContent() : NotFound();
+        [SwaggerOperation(Summary = "Admin-only")]
+
+        public async Task<IActionResult> Deactivate(int id, [FromQuery] DateTime? endDate)
+        {
+            var ok = await svc.Deactivate(id, endDate);
+            if (!ok)
+            {
+                return NotFound();
+            }
+
+            return NoContent();
+        }
     }
 }

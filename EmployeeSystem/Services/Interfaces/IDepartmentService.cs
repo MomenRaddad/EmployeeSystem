@@ -4,13 +4,13 @@ namespace EmployeeSystem.Services.Interfaces
 {
     public interface IDepartmentService
     {
-        IEnumerable<DepartmentModel> GetAll();
-        DepartmentModel? GetById(int id);
+        Task<IEnumerable<DepartmentModel>> GetAll();
+        Task<DepartmentModel?> GetById(int id);
 
-        DepartmentModel Create(DepartmentModel input);
-        bool Update(int id, DepartmentModel input);
-        bool Delete(int id); 
+        Task<DepartmentModel> Create(DepartmentModel input);
+        Task<bool> Update(int id, DepartmentModel input);
+        Task<bool> Delete(int id);
 
-        IEnumerable<EmployeeModel> GetEmployees(int departmentId);
+        Task<IEnumerable<EmployeeModel>> GetEmployees(int departmentId);
     }
 }
