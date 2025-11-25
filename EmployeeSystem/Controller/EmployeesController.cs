@@ -2,8 +2,10 @@
 using EmployeeSystem.Infrastructure;
 using EmployeeSystem.Models;
 using EmployeeSystem.Services.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace EmployeeSystem.Controllers
 {
@@ -12,6 +14,7 @@ namespace EmployeeSystem.Controllers
     public class EmployeesController(IEmployeeService svc, ILogger<EmployeesController> logger) : ControllerBase
     {
         [HttpGet]
+        [AllowAnonymous]
         public async Task<ActionResult<IEnumerable<EmployeeModel>>> GetAll() =>
              Ok(await svc.GetAll());
 
@@ -32,6 +35,9 @@ namespace EmployeeSystem.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles = nameof(AppRole.Admin))]
+        [SwaggerOperation(Summary = "Admin-only")]
+
         public async Task<ActionResult<EmployeeModel>> Create([FromBody] EmployeeModel input)
         {
             if (!ModelState.IsValid)
@@ -55,8 +61,10 @@ namespace EmployeeSystem.Controllers
                 });
             }
         }
-
+        [Authorize(Roles = nameof(AppRole.Admin))]
         [HttpPut("{id:int}")]
+        [SwaggerOperation(Summary = "Admin-only")]
+
         public async Task<IActionResult> Update(int id, [FromBody] EmployeeModel input)
         {
             if (!ModelState.IsValid)
@@ -92,6 +100,9 @@ namespace EmployeeSystem.Controllers
         }
 
         [HttpPatch("{id:int}")]
+        [Authorize(Roles = nameof(AppRole.Admin))]
+        [SwaggerOperation(Summary = "Admin-only")]
+
         public async Task<IActionResult> Patch(int id, [FromBody] UpdateEmployeeDto input)
         {
             if (!ModelState.IsValid)
@@ -116,6 +127,8 @@ namespace EmployeeSystem.Controllers
         }
 
         [HttpDelete("{id:int}")]
+        [SwaggerOperation(Summary = "Admin-only")]
+
         public async Task<IActionResult> Delete(int id)
         {
             var ok = await svc.Delete(id);
@@ -133,6 +146,9 @@ namespace EmployeeSystem.Controllers
         }
 
         [HttpPost("filter")]
+        [Authorize(Roles = nameof(AppRole.Admin))]
+        [SwaggerOperation(Summary = "Admin-only")]
+
         public async Task<ActionResult<IEnumerable<EmployeeModel>>> Filter([FromQuery] EmployeeFilter filter)
         {
             if (!ModelState.IsValid)
@@ -146,6 +162,8 @@ namespace EmployeeSystem.Controllers
         }
 
         [HttpPost("{id:int}/deactivate")]
+        [SwaggerOperation(Summary = "Admin-only")]
+
         public async Task<IActionResult> Deactivate(int id, [FromQuery] DateTime? endDate)
         {
             var ok = await svc.Deactivate(id, endDate);
