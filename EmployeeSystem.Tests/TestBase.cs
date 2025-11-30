@@ -22,5 +22,10 @@ public abstract class TestBase
         var loggerMock = new Mock<ILogger<EmployeeService>>();
         return new EmployeeService(db, loggerMock.Object);
     }
+    internal static DepartmentService CreateDepartmentService(AppDbContext db)
+    {
+        var loggerMock = new Mock<ILogger<DepartmentService>>();
+        return new DepartmentService(db, loggerMock.Object);
+    }
 }
  
