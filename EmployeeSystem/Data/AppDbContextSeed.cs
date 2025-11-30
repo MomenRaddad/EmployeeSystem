@@ -1,4 +1,5 @@
 ﻿using EmployeeSystem.Models;
+using Microsoft.AspNetCore.Identity;
 
 namespace EmployeeSystem.Data
 {
@@ -119,6 +120,9 @@ namespace EmployeeSystem.Data
                 Console.WriteLine("Done ");
 
             }
+
+
+
         }
     }
 }
