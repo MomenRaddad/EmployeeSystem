@@ -127,6 +127,8 @@ namespace EmployeeSystem.Controllers
         }
 
         [HttpDelete("{id:int}")]
+        [Authorize(Roles = nameof(AppRole.Admin))]
+
         [SwaggerOperation(Summary = "Admin-only")]
 
         public async Task<IActionResult> Delete(int id)

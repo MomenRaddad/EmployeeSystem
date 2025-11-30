@@ -1,5 +1,7 @@
 ﻿using EmployeeSystem.Data;
+using EmployeeSystem.Models;
 using EmployeeSystem.Services;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -26,6 +28,34 @@ public abstract class TestBase
     {
         var loggerMock = new Mock<ILogger<DepartmentService>>();
         return new DepartmentService(db, loggerMock.Object);
+    }
+
+
+    internal static Mock<UserManager<ApplicationUser>> CreateUserManagerMock()
+    {
+        var store = new Mock<IUserStore<ApplicationUser>>();
+        return new Mock<UserManager<ApplicationUser>>(
+            store.Object,
+            null, null, null, null, null, null, null, null
+        );
+    }
+
+    internal static Mock<RoleManager<IdentityRole>> CreateRoleManagerMock()
+    {
+        var store = new Mock<IRoleStore<IdentityRole>>();
+        return new Mock<RoleManager<IdentityRole>>(
+            store.Object,
+            null, null, null, null
+        );
+    }
+
+    internal static AuthService CreateAuthService(
+        UserManager<ApplicationUser> userManager,
+        RoleManager<IdentityRole> roleManager,
+        IJwtTokenService jwtToken,
+        ILogger<AuthService> logger)
+    {
+        return new AuthService(userManager, roleManager, jwtToken, logger);
     }
 }
  

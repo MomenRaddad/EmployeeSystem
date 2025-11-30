@@ -2,5 +2,5 @@
 {
     Admin,
     User,
-    Guest
+    Guest,
 }
