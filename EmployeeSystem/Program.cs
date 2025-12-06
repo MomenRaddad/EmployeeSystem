@@ -70,6 +70,7 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
+
 builder.Services.AddDbContext<AppDbContext>(options =>
 {
     options.UseSqlServer(
