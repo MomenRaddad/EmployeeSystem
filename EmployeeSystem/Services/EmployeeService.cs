@@ -2,20 +2,46 @@
 using EmployeeSystem.Dtos;
 using EmployeeSystem.Models;
 using EmployeeSystem.Services.Interfaces;
+using Humanizer;
+using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
+using System.Collections.Generic;
+using System.Drawing;
+using System.Linq;
 
 namespace EmployeeSystem.Services
 {
-    public class EmployeeService(AppDbContext db, ILogger<EmployeeService> logger) : IEmployeeService
+    public class EmployeeService(AppDbContext db, ILogger<EmployeeService> logger, IMemoryCache cache) : IEmployeeService
     {
         public async Task<IEnumerable<EmployeeModel>> GetAll()
         {
             logger.LogInformation("[SERVICE] GetAll employees started");
 
+            var cacheKey = $"Employees:All";
+
+            if (cache.TryGetValue(cacheKey, out IEnumerable<EmployeeModel>? cachedEmployees))
+            {
+                logger.LogInformation("[SERVICE] GetAll employees retrieved from cache. Count={Count}", cachedEmployees.Count());
+                return cachedEmployees;
+            }
+            logger.LogInformation("[CACHE] Miss - Key='Employees:All'");
+
+
+            var cacheOptions = new MemoryCacheEntryOptions().
+                SetAbsoluteExpiration(TimeSpan.FromMinutes(10)).
+                SetSlidingExpiration(TimeSpan.FromMinutes(3)).
+                SetPriority(CacheItemPriority.High);
+
             var employees = await db.Employees
                 .AsNoTracking()
                 .ToListAsync();
+
+            cache.Set(cacheKey, employees, cacheOptions);
+
+            logger.LogInformation("[CACHE] SET - Key='{Key}', Absolute={Abs}min, Sliding={Slide}min", cacheKey, 15,3);
 
             logger.LogInformation("[SERVICE] GetAll employees completed. Count={Count}", employees.Count);
 
@@ -25,15 +51,34 @@ namespace EmployeeSystem.Services
         public async Task<EmployeeModel?> GetById(int id)
         {
             logger.LogInformation("[SERVICE] GetById called for EmployeeId={EmployeeId}", id);
+            var cacheKey=$"Employees:Id:{id}";
+
+            if(cache.TryGetValue(cacheKey, out EmployeeModel? cachedEmployee))
+            {
+                logger.LogInformation("[SERVICE] GetById employee {EmployeeId} retrieved from cache", id);
+                return cachedEmployee;
+            }
+           
+            logger.LogInformation("[CACHE] Miss - Key='{Key}'", cacheKey);
+
+
 
             var e = await db.Employees
                 .AsNoTracking()
                 .FirstOrDefaultAsync(e => e.Id == id);
+     
 
-            if (e is null)
-            {
+                if (e is null)
+                 {
                 logger.LogWarning("[SERVICE] GetById: employee {EmployeeId} not found", id);
-            }
+                return e;
+                 }
+            var cacheOptions = new MemoryCacheEntryOptions().
+                 SetAbsoluteExpiration(TimeSpan.FromMinutes(7))
+                .SetSlidingExpiration(TimeSpan.FromMinutes(3));
+
+            cache.Set(cacheKey, e, cacheOptions);
+            logger.LogInformation("[CACHE] SET - Key='{Key}', Absolute={Abs}min, Sliding={Slide}min", cacheKey,10,1);
 
             return e;
         }
@@ -60,7 +105,8 @@ namespace EmployeeSystem.Services
 
             await db.Employees.AddAsync(input);
             await db.SaveChangesAsync();
-
+            cache.Remove("Employees:All");
+            logger.LogInformation("[CACHE] REMOVE - Key='Employees:All' due to new employee creation");
             logger.LogInformation(
                 "[SERVICE] Employee created. EmployeeId={EmployeeId}, DepartmentId={DepartmentId}",
                 input.Id,
@@ -101,7 +147,10 @@ namespace EmployeeSystem.Services
             e.IsActive = input.IsActive;
 
             await db.SaveChangesAsync();
+            cache.Remove("Employees:All");
+            cache.Remove($"Employees:Id:{id}");
 
+            logger.LogInformation("[CACHE] REMOVE - Key='Employees:All' due to employee {EmployeeId} update", id);
             logger.LogInformation("[SERVICE] Employee {EmployeeId} updated successfully", id);
             return true;
         }
@@ -143,7 +192,9 @@ namespace EmployeeSystem.Services
             if (input.IsActive.HasValue) e.IsActive = input.IsActive.Value;
 
             await db.SaveChangesAsync();
-
+            cache.Remove("Employees:All");
+            cache.Remove($"Employees:Id:{id}");
+            logger.LogInformation("[CACHE] REMOVE - Key='Employees:All' due to employee {EmployeeId} patch", id);
             logger.LogInformation("[SERVICE] Employee {EmployeeId} patched successfully", id);
             return (true, null, false);
         }
@@ -161,7 +212,8 @@ namespace EmployeeSystem.Services
 
             db.Employees.Remove(e);
             await db.SaveChangesAsync();
-
+            cache.Remove("Employees:All");
+            logger.LogInformation("[CACHE] REMOVE - Key='Employees:All' due to employee {EmployeeId} deletion", id);
             logger.LogInformation("[SERVICE] Employee {EmployeeId} deleted", id);
             return true;
         }
@@ -184,7 +236,11 @@ namespace EmployeeSystem.Services
             e.EndOfServiceDate = endDate ?? DateTime.Now;
 
             await db.SaveChangesAsync();
-
+            cache.Remove("Employees:All");
+            cache.Remove($"Employees:Id:{id}");
+            logger.LogInformation("[CACHE] REMOVE - Key='Employees:All' due to employee {EmployeeId} deactivation", id);
+            logger.LogInformation("[CACHE] REMOVE - Key='Employees:Id:{EmployeeId}' due to deactivation", id);
+            
             logger.LogInformation(
                 "[SERVICE] Employee {EmployeeId} deactivated (EndDate={EndDate})",
                 id,
@@ -211,10 +267,7 @@ namespace EmployeeSystem.Services
             {
                 query = query.Where(e => e.DepartmentId == filter.DepartmentId.Value);
             }
-            if (filter.MinYearsOfService.HasValue)
-            {
-                query = query.Where(e => e.YearsOfService >= filter.MinYearsOfService.Value);
-            }
+           
             if (filter.IsActive.HasValue)
             {
                 query = query.Where(e => e.IsActive == filter.IsActive.Value);
@@ -222,8 +275,13 @@ namespace EmployeeSystem.Services
 
             var data = await query.ToListAsync();
 
+            if (filter.MinYearsOfService.HasValue)
+            {
+                data = data.Where(e => e.YearsOfService >= filter.MinYearsOfService.Value).ToList();
+            }
             logger.LogInformation("[SERVICE] FilterEmployees completed. Count={Count}", data.Count);
             return data;
         }
+  
     }
 }

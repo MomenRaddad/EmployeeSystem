@@ -3,6 +3,7 @@ using EmployeeSystem.Models;
 using EmployeeSystem.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using Moq;
 
@@ -22,7 +23,9 @@ public abstract class TestBase
     internal static EmployeeService CreateService(AppDbContext db)
     {
         var loggerMock = new Mock<ILogger<EmployeeService>>();
-        return new EmployeeService(db, loggerMock.Object);
+        var memoryCache = new MemoryCache(new MemoryCacheOptions());
+
+        return new EmployeeService(db, loggerMock.Object, memoryCache);
     }
     internal static DepartmentService CreateDepartmentService(AppDbContext db)
     {
