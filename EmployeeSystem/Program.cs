@@ -14,6 +14,8 @@ using Serilog.Events;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Microsoft.Extensions.Caching.StackExchangeRedis;
+using EmployeeSystem.Infrastructure.Caching;
 
 Log.Logger = new LoggerConfiguration()
     .MinimumLevel.Information()
@@ -35,6 +37,11 @@ builder.Host.UseSerilog();
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddStackExchangeRedisCache(options =>
+{
+    options.Configuration = builder.Configuration.GetConnectionString("Redis");
+    options.InstanceName = "EmployeeSystem:"; 
+});
 builder.Services
     .AddControllers()
     .AddJsonOptions(options =>
@@ -171,6 +178,7 @@ builder.Services.AddScoped<IEmployeeService, EmployeeService>();
 builder.Services.AddScoped<IDepartmentService, DepartmentService>();
 builder.Services.AddScoped<IJwtTokenService, JwtTokenService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IAppCache, RedisAppCache>();
 var app = builder.Build();
 
 using (var scope = app.Services.CreateScope())

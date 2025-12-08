@@ -1,6 +1,7 @@
 ﻿using EmployeeSystem.Data;
 using EmployeeSystem.Models;
 using EmployeeSystem.Services;
+using EmployeeSystem.Services.Interfaces;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -22,7 +23,8 @@ public abstract class TestBase
     internal static EmployeeService CreateService(AppDbContext db)
     {
         var loggerMock = new Mock<ILogger<EmployeeService>>();
-        return new EmployeeService(db, loggerMock.Object);
+        var cacheMock = new Mock<IAppCache>();
+        return new EmployeeService(db, loggerMock.Object, cacheMock.Object);
     }
     internal static DepartmentService CreateDepartmentService(AppDbContext db)
     {
