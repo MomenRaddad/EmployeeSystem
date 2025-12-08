@@ -29,7 +29,9 @@ public abstract class TestBase
     internal static DepartmentService CreateDepartmentService(AppDbContext db)
     {
         var loggerMock = new Mock<ILogger<DepartmentService>>();
-        return new DepartmentService(db, loggerMock.Object);
+        var cacheMock = new Mock<IAppCache>();
+
+        return new DepartmentService(db, loggerMock.Object,cacheMock.Object);
     }
 
 
