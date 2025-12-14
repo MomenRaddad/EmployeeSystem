@@ -107,7 +107,7 @@ namespace EmployeeSystem.Services
 
             await db.SaveChangesAsync();
             cache.Remove("departments_all");
-            cache.Remove($"Department_Id:{id});
+            cache.Remove($"Department_Id:{id}");
             logger.LogInformation("[CACHE] REMOVE - Key='departments_all'");
             logger.LogInformation("[CACHE] REMOVE - Key='Employees:Id:{DepartmentId}'", id);
             logger.LogInformation("[SERVICE] Department {DepartmentId} updated successfully", id);
