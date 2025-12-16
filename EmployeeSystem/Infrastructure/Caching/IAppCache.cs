@@ -1,8 +1,4 @@
-﻿using System;
-using System.Threading;
-using System.Threading.Tasks;
-
-namespace EmployeeSystem.Services.Interfaces
+﻿namespace EmployeeSystem.Services.Interfaces
 {
     public interface IAppCache
     {

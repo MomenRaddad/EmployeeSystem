@@ -1,11 +1,11 @@
-﻿using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Text;
-using EmployeeSystem.Dtos.Auth;     
-using EmployeeSystem.Models;        
+﻿using EmployeeSystem.Dtos.Auth;
+using EmployeeSystem.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
 
 namespace EmployeeSystem.Services
 {
@@ -32,25 +32,25 @@ namespace EmployeeSystem.Services
                 new Claim(ClaimTypes.Name, user.UserName ?? string.Empty)
             };
 
-                        var roles = await _userManager.GetRolesAsync(user);
+            var roles = await _userManager.GetRolesAsync(user);
             foreach (var role in roles)
             {
                 claims.Add(new Claim(ClaimTypes.Role, role));
             }
 
-                        var keyBytes = Encoding.UTF8.GetBytes(_jwtSettings.Key);
+            var keyBytes = Encoding.UTF8.GetBytes(_jwtSettings.Key);
             var securityKey = new SymmetricSecurityKey(keyBytes);
             var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
 
-                        var expires = DateTime.UtcNow.AddMinutes(_jwtSettings.DurationInMinutes);
+            var expires = DateTime.UtcNow.AddMinutes(_jwtSettings.DurationInMinutes);
 
-                        var tokenDescriptor = new JwtSecurityToken(
-                issuer: _jwtSettings.Issuer,
-                audience: _jwtSettings.Audience,
-                claims: claims,
-                notBefore: DateTime.UtcNow,
-                expires: expires,
-                signingCredentials: credentials);
+            var tokenDescriptor = new JwtSecurityToken(
+    issuer: _jwtSettings.Issuer,
+    audience: _jwtSettings.Audience,
+    claims: claims,
+    notBefore: DateTime.UtcNow,
+    expires: expires,
+    signingCredentials: credentials);
 
             var handler = new JwtSecurityTokenHandler();
             var tokenString = handler.WriteToken(tokenDescriptor);

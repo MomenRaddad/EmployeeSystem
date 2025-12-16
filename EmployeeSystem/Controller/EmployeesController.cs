@@ -4,7 +4,6 @@ using EmployeeSystem.Models;
 using EmployeeSystem.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
 using Swashbuckle.AspNetCore.Annotations;
 
 namespace EmployeeSystem.Controllers

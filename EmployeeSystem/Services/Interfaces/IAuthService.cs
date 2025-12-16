@@ -1,5 +1,4 @@
-﻿using System.Threading.Tasks;
-using EmployeeSystem.Dtos.Auth;
+﻿using EmployeeSystem.Dtos.Auth;
 using Microsoft.AspNetCore.Identity;
 
 namespace EmployeeSystem.Services.Interfaces

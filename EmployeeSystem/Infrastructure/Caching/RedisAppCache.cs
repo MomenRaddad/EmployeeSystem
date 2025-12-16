@@ -1,6 +1,6 @@
-﻿using System.Text.Json;
-using EmployeeSystem.Services.Interfaces;
+﻿using EmployeeSystem.Services.Interfaces;
 using Microsoft.Extensions.Caching.Distributed;
+using System.Text.Json;
 
 namespace EmployeeSystem.Infrastructure.Caching;
 
@@ -41,7 +41,7 @@ public class RedisAppCache(
         string key,
         T value,
         TimeSpan? absoluteExpiration = null)
-       
+
     {
         try
         {
