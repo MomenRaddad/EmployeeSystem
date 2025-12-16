@@ -1,6 +1,6 @@
-﻿using Microsoft.EntityFrameworkCore;
-using EmployeeSystem.Models;
+﻿using EmployeeSystem.Models;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 
 namespace EmployeeSystem.Data
 {

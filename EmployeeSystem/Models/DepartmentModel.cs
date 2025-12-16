@@ -20,6 +20,6 @@ namespace EmployeeSystem.Models
         [Required]
         public string DepartmentSupervisor { get; set; }
         [JsonIgnore]
-        public  ICollection<EmployeeModel> Employees { get; set; } = new List<EmployeeModel>();
+        public ICollection<EmployeeModel> Employees { get; set; } = new List<EmployeeModel>();
     }
 }

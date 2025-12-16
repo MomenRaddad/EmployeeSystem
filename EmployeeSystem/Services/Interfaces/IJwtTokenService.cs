@@ -1,6 +1,5 @@
 ﻿using EmployeeSystem.Dtos.Auth;
 using EmployeeSystem.Models;
-using System.Threading.Tasks;
 
 public interface IJwtTokenService
 {

@@ -2,15 +2,8 @@
 using EmployeeSystem.Dtos;
 using EmployeeSystem.Models;
 using EmployeeSystem.Services.Interfaces;
-using Humanizer;
-using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.Extensions.Caching.Memory;
-using Microsoft.Extensions.Logging;
-using System.Collections.Generic;
-using System.Drawing;
-using System.Linq;
 
 namespace EmployeeSystem.Services
 {
@@ -41,7 +34,7 @@ namespace EmployeeSystem.Services
 
             cache.Set(cacheKey, employees, cacheOptions);
 
-            logger.LogInformation("[CACHE] SET - Key='{Key}', Absolute={Abs}min, Sliding={Slide}min", cacheKey, 15,3);
+            logger.LogInformation("[CACHE] SET - Key='{Key}', Absolute={Abs}min, Sliding={Slide}min", cacheKey, 15, 3);
 
             logger.LogInformation("[SERVICE] GetAll employees completed. Count={Count}", employees.Count);
 
@@ -51,14 +44,14 @@ namespace EmployeeSystem.Services
         public async Task<EmployeeModel?> GetById(int id)
         {
             logger.LogInformation("[SERVICE] GetById called for EmployeeId={EmployeeId}", id);
-            var cacheKey=$"Employees:Id:{id}";
+            var cacheKey = $"Employees:Id:{id}";
 
-            if(cache.TryGetValue(cacheKey, out EmployeeModel? cachedEmployee))
+            if (cache.TryGetValue(cacheKey, out EmployeeModel? cachedEmployee))
             {
                 logger.LogInformation("[SERVICE] GetById employee {EmployeeId} retrieved from cache", id);
                 return cachedEmployee;
             }
-           
+
             logger.LogInformation("[CACHE] Miss - Key='{Key}'", cacheKey);
 
 
@@ -66,19 +59,19 @@ namespace EmployeeSystem.Services
             var e = await db.Employees
                 .AsNoTracking()
                 .FirstOrDefaultAsync(e => e.Id == id);
-     
 
-                if (e is null)
-                 {
+
+            if (e is null)
+            {
                 logger.LogWarning("[SERVICE] GetById: employee {EmployeeId} not found", id);
                 return e;
-                 }
+            }
             var cacheOptions = new MemoryCacheEntryOptions().
                  SetAbsoluteExpiration(TimeSpan.FromMinutes(7))
                 .SetSlidingExpiration(TimeSpan.FromMinutes(3));
 
             cache.Set(cacheKey, e, cacheOptions);
-            logger.LogInformation("[CACHE] SET - Key='{Key}', Absolute={Abs}min, Sliding={Slide}min", cacheKey,10,1);
+            logger.LogInformation("[CACHE] SET - Key='{Key}', Absolute={Abs}min, Sliding={Slide}min", cacheKey, 10, 1);
 
             return e;
         }
@@ -240,7 +233,7 @@ namespace EmployeeSystem.Services
             cache.Remove($"Employees:Id:{id}");
             logger.LogInformation("[CACHE] REMOVE - Key='Employees:All' due to employee {EmployeeId} deactivation", id);
             logger.LogInformation("[CACHE] REMOVE - Key='Employees:Id:{EmployeeId}' due to deactivation", id);
-            
+
             logger.LogInformation(
                 "[SERVICE] Employee {EmployeeId} deactivated (EndDate={EndDate})",
                 id,
@@ -267,7 +260,7 @@ namespace EmployeeSystem.Services
             {
                 query = query.Where(e => e.DepartmentId == filter.DepartmentId.Value);
             }
-           
+
             if (filter.IsActive.HasValue)
             {
                 query = query.Where(e => e.IsActive == filter.IsActive.Value);
@@ -282,6 +275,6 @@ namespace EmployeeSystem.Services
             logger.LogInformation("[SERVICE] FilterEmployees completed. Count={Count}", data.Count);
             return data;
         }
-  
+
     }
 }

@@ -2,7 +2,6 @@
 using EmployeeSystem.Models;
 using EmployeeSystem.Services.Interfaces;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.Extensions.Logging;
 using System.Data;
 
 namespace EmployeeSystem.Services;
@@ -14,7 +13,7 @@ public class AuthService(
     ILogger<AuthService> logger
 ) : IAuthService
 {
-                public async Task<IdentityResult> RegisterAsync(RegisterDto input)
+    public async Task<IdentityResult> RegisterAsync(RegisterDto input)
     {
         logger.LogInformation("[AUTH] Register request for {Email}", input.Email);
 
@@ -37,9 +36,9 @@ public class AuthService(
         };
 
         var create = await userManager.CreateAsync(user, input.Password);
-    
-      
-        
+
+
+
         if (!create.Succeeded)
         {
             logger.LogWarning(
@@ -85,7 +84,7 @@ public class AuthService(
         return IdentityResult.Success;
     }
 
-                public async Task<TokenResponseDto?> LoginAsync(LoginDto input)
+    public async Task<TokenResponseDto?> LoginAsync(LoginDto input)
     {
         logger.LogInformation("[AUTH] Login request for {Email} ", input.Email);
 
@@ -105,12 +104,12 @@ public class AuthService(
 
         var token = await jwtTokenService.GenerateTokenAsync(user);
 
-        logger.LogInformation("[AUTH] User {Email} logged in successfully with role {Role}", input.Email,token.Role);
+        logger.LogInformation("[AUTH] User {Email} logged in successfully with role {Role}", input.Email, token.Role);
 
         return token;
     }
 
-                public async Task<IdentityResult> AdminCreateUserAsync(AdminCreateUserDto input)
+    public async Task<IdentityResult> AdminCreateUserAsync(AdminCreateUserDto input)
     {
         logger.LogInformation("[AUTH] AdminCreateUser request for {Email} with role {Role}",
             input.Email,

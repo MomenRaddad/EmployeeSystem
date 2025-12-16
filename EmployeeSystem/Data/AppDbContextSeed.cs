@@ -1,5 +1,4 @@
 ﻿using EmployeeSystem.Models;
-using Microsoft.AspNetCore.Identity;
 
 namespace EmployeeSystem.Data
 {
@@ -110,7 +109,7 @@ namespace EmployeeSystem.Data
                         DateOfBirth = new DateTime(1993, 3, 27),
                         DateOfEmployment = new DateTime(2017, 11, 3),
                         EndOfServiceDate = null,
-                        
+
                         DepartmentId = depsByName["Logistics"]
                     }
 

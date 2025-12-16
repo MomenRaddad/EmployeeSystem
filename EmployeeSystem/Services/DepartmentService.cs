@@ -1,14 +1,12 @@
 ﻿using EmployeeSystem.Data;
-using EmployeeSystem.Migrations;
 using EmployeeSystem.Models;
 using EmployeeSystem.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
-using Microsoft.Extensions.Logging;
 
 namespace EmployeeSystem.Services
 {
-    public class DepartmentService(AppDbContext db, ILogger<DepartmentService> logger,IMemoryCache cache) : IDepartmentService
+    public class DepartmentService(AppDbContext db, ILogger<DepartmentService> logger, IMemoryCache cache) : IDepartmentService
     {
         public async Task<IEnumerable<DepartmentModel>> GetAll()
         {
@@ -24,7 +22,7 @@ namespace EmployeeSystem.Services
             var depts = await db.Departments
                 .AsNoTracking()
                 .ToListAsync();
-            
+
             var cacheOptions = new MemoryCacheEntryOptions()
                 .SetAbsoluteExpiration(TimeSpan.FromMinutes(5))
                 .SetSlidingExpiration(TimeSpan.FromMinutes(2));
@@ -42,13 +40,13 @@ namespace EmployeeSystem.Services
 
 
             logger.LogInformation("[SERVICE] Get department by id {DepartmentId} started", id);
-            if(cache.TryGetValue(cacheKey, out DepartmentModel? cachedDept))
+            if (cache.TryGetValue(cacheKey, out DepartmentModel? cachedDept))
             {
                 logger.LogInformation("[SERVICE] Get department by id {DepartmentId} completed from cache", id);
                 return cachedDept;
             }
- 
-                logger.LogInformation("[CACHE] Miss - Key='{Key}'", cacheKey);
+
+            logger.LogInformation("[CACHE] Miss - Key='{Key}'", cacheKey);
 
 
             var d = await db.Departments
@@ -67,7 +65,7 @@ namespace EmployeeSystem.Services
                 .SetSlidingExpiration(TimeSpan.FromMinutes(1));
 
             cache.Set(cacheKey, d, cacheOptions);
-            logger.LogInformation("[CACHE] SET - Key='{Key}', Absolute={Abs}min, Sliding={Slide}min", cacheKey,3,1);
+            logger.LogInformation("[CACHE] SET - Key='{Key}', Absolute={Abs}min, Sliding={Slide}min", cacheKey, 3, 1);
             return d;
         }
 
@@ -165,7 +163,7 @@ namespace EmployeeSystem.Services
 
                 return cachedEmps;
             }
-          logger.LogInformation("[CACHE] Miss - Key='DeptEmployees:Id:{DepartmentId}'", departmentId);
+            logger.LogInformation("[CACHE] Miss - Key='DeptEmployees:Id:{DepartmentId}'", departmentId);
 
             var employees = await db.Employees
                 .AsNoTracking()

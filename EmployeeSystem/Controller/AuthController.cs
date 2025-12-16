@@ -2,12 +2,8 @@
 using EmployeeSystem.Infrastructure;
 using EmployeeSystem.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
 using Swashbuckle.AspNetCore.Annotations;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace EmployeeSystem.Controllers
 {
@@ -17,7 +13,7 @@ namespace EmployeeSystem.Controllers
         IAuthService authService,
         ILogger<AuthController> logger) : ControllerBase
     {
-                [HttpPost("register")]
+        [HttpPost("register")]
         [AllowAnonymous]
         [SwaggerOperation(Summary = "Register new user (self-register, default role = Guest)")]
         public async Task<IActionResult> Register([FromBody] RegisterDto input)
@@ -58,7 +54,7 @@ namespace EmployeeSystem.Controllers
             });
         }
 
-                [HttpPost("login")]
+        [HttpPost("login")]
         [AllowAnonymous]
         [SwaggerOperation(Summary = "Login and get JWT token")]
         public async Task<IActionResult> Login([FromBody] LoginDto input)
@@ -84,7 +80,7 @@ namespace EmployeeSystem.Controllers
             return Ok(tokenDto);
         }
 
-                [HttpPost("admin/create-user")]
+        [HttpPost("admin/create-user")]
         [Authorize(Roles = "Admin")]
         [SwaggerOperation(Summary = "Admin-only")]
         public async Task<IActionResult> AdminCreateUser([FromBody] AdminCreateUserDto input)

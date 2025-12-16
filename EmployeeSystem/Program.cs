@@ -85,12 +85,12 @@ builder.Services
     .AddEntityFrameworkStores<AppDbContext>()
     .AddDefaultTokenProviders();
 
-var jwtSection=builder.Configuration.GetSection("Jwt");
-var jwtKey=jwtSection.GetValue<string>("Key")?? throw new InvalidOperationException("JWT key missing");
-var jwtIssuer=jwtSection.GetValue<string>("Issuer");
-var jwtAudience=jwtSection.GetValue<string>("Audience");
+var jwtSection = builder.Configuration.GetSection("Jwt");
+var jwtKey = jwtSection.GetValue<string>("Key") ?? throw new InvalidOperationException("JWT key missing");
+var jwtIssuer = jwtSection.GetValue<string>("Issuer");
+var jwtAudience = jwtSection.GetValue<string>("Audience");
 
-var signingKey=new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey));
+var signingKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey));
 
 builder.Services
     .AddAuthentication(options =>
@@ -115,54 +115,54 @@ builder.Services
             IssuerSigningKey = signingKey
         };
 
-                options.Events = new JwtBearerEvents
+        options.Events = new JwtBearerEvents
         {
-                        OnChallenge = async context =>
-            {
-                                context.HandleResponse();
+            OnChallenge = async context =>
+{
+    context.HandleResponse();
 
-                context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-                context.Response.ContentType = "application/json";
+    context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+    context.Response.ContentType = "application/json";
 
-                var payload = JsonSerializer.Serialize(new
-                {
-                    status = 401,
-                    error = "unauthorized",
-                    message = "Authentication is required or the token is invalid."
-                });
+    var payload = JsonSerializer.Serialize(new
+    {
+        status = 401,
+        error = "unauthorized",
+        message = "Authentication is required or the token is invalid."
+    });
 
-                await context.Response.WriteAsync(payload);
-            },
+    await context.Response.WriteAsync(payload);
+},
 
-                        OnAuthenticationFailed = async context =>
-            {
-                context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-                context.Response.ContentType = "application/json";
+            OnAuthenticationFailed = async context =>
+{
+    context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+    context.Response.ContentType = "application/json";
 
-                var payload = JsonSerializer.Serialize(new
-                {
-                    status = 401,
-                    error = "invalid_token",
-                    message = context.Exception.Message
-                });
+    var payload = JsonSerializer.Serialize(new
+    {
+        status = 401,
+        error = "invalid_token",
+        message = context.Exception.Message
+    });
 
-                await context.Response.WriteAsync(payload);
-            },
+    await context.Response.WriteAsync(payload);
+},
 
-                        OnForbidden = async context =>
-            {
-                context.Response.StatusCode = StatusCodes.Status403Forbidden;
-                context.Response.ContentType = "application/json";
+            OnForbidden = async context =>
+{
+    context.Response.StatusCode = StatusCodes.Status403Forbidden;
+    context.Response.ContentType = "application/json";
 
-                var payload = JsonSerializer.Serialize(new
-                {
-                    status = 403,
-                    error = "forbidden",
-                    message = "You do not have permission to access this resource."
-                });
+    var payload = JsonSerializer.Serialize(new
+    {
+        status = 403,
+        error = "forbidden",
+        message = "You do not have permission to access this resource."
+    });
 
-                await context.Response.WriteAsync(payload);
-            }
+    await context.Response.WriteAsync(payload);
+}
         };
     });
 

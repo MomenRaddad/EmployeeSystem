@@ -3,14 +3,13 @@ using EmployeeSystem.Models;
 using EmployeeSystem.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
 using Swashbuckle.AspNetCore.Annotations;
 
 namespace EmployeeSystem.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    
+
     public class DepartmentsController(IDepartmentService svc, ILogger<DepartmentsController> logger) : ControllerBase
     {
         [HttpGet]
@@ -19,8 +18,8 @@ namespace EmployeeSystem.Controllers
         public async Task<ActionResult<IEnumerable<DepartmentModel>>> GetAll()
             => Ok(await svc.GetAll());
 
-        
-        
+
+
         [HttpGet("{id:int}")]
         [Authorize(Roles = nameof(AppRole.Admin))]
 
@@ -110,7 +109,7 @@ namespace EmployeeSystem.Controllers
         }
 
         [HttpGet("{id:int}/employees")]
-        [Authorize(Roles =nameof(AppRole.User)+nameof(AppRole.Admin))]
+        [Authorize(Roles = nameof(AppRole.User) + nameof(AppRole.Admin))]
         [SwaggerOperation(Summary = "user,admin")]
 
         public async Task<ActionResult<IEnumerable<EmployeeModel>>> EmployeesInDept(int id)
